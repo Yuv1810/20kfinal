@@ -5,14 +5,29 @@ import Link from "@/node_modules/next/link";
 import Signup_button from "../component/Signup_button";
 import { redirect } from 'next/navigation'
 import Header from "../component/Header";
+import { useRouter } from "next/navigation";
 
 export default function fun(){
+
+  useEffect(()=>{
+    const token= localStorage.getItem("token");
+    console.log(token?.split(' ')[1]);
+    if(!token){
+      redirect('/login');
+    }
+  },[]);
+
+  
+  const router = useRouter();
  return(
     <>
     <Header/>
-    <div className="flex flex-col md:flex-row justify-center items-center h-screen">
+    <div className="flex flex-col md:flex-row justify-center items-center h-full md:mt-32 mt-10">
       <div
         className="cursor-pointer p-4 max-w-md mx-auto bg-blue-500 text-white text-center text-lg font-semibold rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50 w-100 ml-4 mr-4 mb-10 md:mb-0"
+        onClick={()=>{
+          router.push('/chat/science')
+        }}
       >
         <img
           src={
@@ -26,6 +41,9 @@ export default function fun(){
       </div>
       <div
         className="cursor-pointer p-4 max-w-md mx-auto bg-blue-500 text-white text-center text-lg font-semibold rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50 w-100 ml-4 mr-4 "
+        onClick={()=>{
+          router.push('/chat/computer')
+        }}
       >
         <img
           src={

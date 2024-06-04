@@ -5,8 +5,21 @@ import Link from "@/node_modules/next/link";
 import Signup_button from "../component/Signup_button";
 import { redirect } from 'next/navigation'
 import Header from "../component/Header";
+import { useRouter } from "next/navigation";
 
 export default function fun(){
+  const router=useRouter();
+
+  useEffect(()=>{
+    const token= localStorage.getItem("token");
+    console.log(token?.split(' ')[1]);
+    if(!token){
+      redirect('/login');
+    }
+  },[]);
+
+  
+
  return(
     <>
     <Header/>
@@ -17,6 +30,9 @@ export default function fun(){
       <div
      
         className="cursor-pointer p-4 max-w-md mx-auto bg-blue-500 text-white text-center text-lg font-semibold rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50 w-100 ml-4 mr-4 mb-10 md:mb-0"
+        onClick={()=>{
+          router.push('/test/1');
+        }}
       >
         <img
           src={
@@ -30,6 +46,9 @@ export default function fun(){
       </div>
       <div
         className="cursor-pointer p-4 max-w-md mx-auto bg-blue-500 text-white text-center text-lg font-semibold rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-50 w-100 ml-4 mr-4 "
+        onClick={()=>{
+          router.push('/test/2');
+        }}
       >
         <img
           src={

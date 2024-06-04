@@ -2,6 +2,8 @@
 import { useState } from "react";
 import Link from "@/node_modules/next/link";
 import Signup_button from "../component/Signup_button";
+import { useRouter } from 'next/navigation'
+import axios from 'axios';
 
 type User={
   username:string,
@@ -10,7 +12,7 @@ type User={
 }
 
 export default function Home() {
-
+  const router=useRouter();
   const [formdata,setformdata]=useState({
     username:'',
     email:'',
@@ -40,7 +42,26 @@ export default function Home() {
     <input  onChange={fun} type="text" className="text-black flex rounded-sm w-80 h-8 ml-auto mr-auto mb-4 mt-2" name='email' value={formdata.email}></input>
    
 
-  <Signup_button {...formdata}/>
+
+         <button className="w-2/5 bg-white rounded-md border rounded h-12 m-auto text-black" onClick={async ()=>{
+          console.log(formdata);
+         
+      
+          try {
+            const response=await axios.post('http://localhost:3002/signup',{
+              ...formdata
+             });
+             
+             router.push('/login');
+
+          } catch (error) {
+            console.log("Some error occurred");
+          }
+       
+        }
+        
+          }>Sign Up</button>
+        
     <div className="flex flex-row justify-center justify-items-center p-auto mb-4 mt-6">
       <p className="m-auto text-sm">Already a user ?</p>
       <Link  className="underline-offset-0 mr-10"  href='/login'>Login</Link>

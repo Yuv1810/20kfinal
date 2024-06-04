@@ -1,10 +1,21 @@
 'use client';
 import Image from "next/image";
 import { useState } from "react";
+import { useEffect } from "react";
 import Header from "@/app/component/header";
+import { redirect } from "next/navigation";
 
 
 export default function Home() {
+
+  useEffect(()=>{
+    const token= localStorage.getItem("token");
+    console.log(token?.split(' ')[1]);
+    if(!token){
+      redirect('/login');
+    }
+  },[]);
+  
   const [shownav,setshownav]=useState(false);
   return (
   
@@ -16,7 +27,7 @@ export default function Home() {
 {/* row one */}
 <div className="gap-x-5 md:flex flex-row ">
 <div className="bg-contain h-60 md:h-80 md:w-full">
-  <img src='/assets/Personalised-content.webp' alt='Personalised-content' className="h-full w-full object-cover rounded-lg"></img>
+  <img src='/assets/Image-Recognition.jpeg' alt='Personalised-content' className="h-full w-full object-cover rounded-lg"></img>
   </div>
 
 <div className="p-6">
@@ -32,7 +43,7 @@ Take advantage of our cutting-edge image recognition technology to enhance your 
 
 <div className="gap-x-5 md:flex flex-row-reverse ">
   <div className="bg-contain h-60 md:h-80 md:w-full">
-  <img src='/assets/Personalised-content.webp' alt='Personalised-content' className="h-full w-full object-cover rounded-lg"></img>
+  <img src='/assets/Text_to_speech.png' alt='Text-to-speech' className="h-full w-full object-cover rounded-lg bg-blue-500"></img>
   </div>
 
 <div className="p-6">
@@ -48,7 +59,7 @@ Our platform features an advanced text-to-speech function that converts written 
 
 <div className="gap-x-5 md:flex flex-row ">
 <div className="bg-contain h-60 md:h-80 md:w-full">
-  <img src='/assets/Personalised-content.webp' alt='Personalised-content' className="h-full w-full object-cover rounded-lg"></img>
+  <img src='/assets/Personalized-learning.jpeg' alt='Personalised-content' className="h-full w-full object-cover rounded-lg"></img>
   </div>
 
 <div className="p-6">
@@ -64,7 +75,7 @@ Experience a truly personalized learning journey with our AI-driven platform. Ou
 {/* row four */}
 <div className="gap-x-5 md:flex flex-row-reverse ">
   <div className="bg-contain h-60 md:h-80 md:w-full">
-  <img src='/assets/Personalised-content.webp' alt='Personalised-content' className="h-full w-full object-cover rounded-lg"></img>
+  <img src='/assets/Speech-to-text.jpeg' alt='Speech_Recognition' className="h-full w-full object-cover rounded-lg"></img>
   </div>
 
 <div className="p-6">

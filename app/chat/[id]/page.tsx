@@ -1,12 +1,21 @@
 "use client"
+import "regenerator-runtime/runtime";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import React from 'react'
 import {createRoot} from 'react-dom/client'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import MicButton from "@/app/component/micButton";
+import { redirect } from 'next/navigation';
+
+
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
+// import { redirect } from "next/dist/server/api-utils";
  
 const ReactMarkdown = dynamic(() => import('react-markdown'), {
   ssr: false,
@@ -35,13 +44,163 @@ Welcome to the Recipe App! This application allows users to create, share, and o
 ![WhatsApp Image 2023-08-24 at 16 46 33 (2)](https://github.com/Yuv1810/recipe-app/assets/119923256/ae200c1c-9530-4aa7-b90a-28e548045738)
 ![WhatsApp Image 2023-08-24 at 16 46 33](https://github.com/Yuv1810/recipe-app/assets/119923256/ac9d9c63-0732-45ba-b9a4-678c305ad2f8)
 `
+const ImageUpload = () => {
+  const [base64Data, setBase64Data] = useState<string | null>(null);
 
-export const DynamicTextarea = () => {
+  const onChange = (e:any) => {
+    let file = e.target.files[0];
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = handleReaderLoaded;
+      reader.readAsBinaryString(file);
+    }
+  };
+
+  const handleReaderLoaded = (e:any) => {
+    console.log("file uploaded 2: ", e);
+    let binaryString = e.target.result;
+    setBase64Data(btoa(binaryString));
+  };
+
+  console.log("base64", base64Data);
+
+  return (
+    <div className="flex items-center space-x-4 fixed z-1 left-20 top-1 md:left-10 md:top-24">
+  <label
+    htmlFor="file"
+    className="cursor-pointer bg-blue-500 text-white rounded-full hover:bg-blue-700"
+  >
+    <img
+            src="/assets/clip-button.png"
+            className="rounded-full w-10 h-10"
+          />
+  </label>
+  <span id="file-chosen" className="text-white">{(base64Data)? "File chosen": "No file chosen"}</span>
+  <input
+    type="file"
+    name="image"
+    id="file"
+    accept=".jpg, .jpeg, .png"
+    onChange={onChange}
+    className="hidden"
+  />
+</div>
+  );
+};
+
+
+
+
+
+const TextToSpeech = ({text}:any) => {
+  const [isPaused, setIsPaused] = useState(false);
+  const [utterance, setUtterance] = useState<null | SpeechSynthesisUtterance>(null);
+
+  useEffect(() => {
+    const synth = window.speechSynthesis;
+    const u = new SpeechSynthesisUtterance(text);
+
+    setUtterance(u);
+
+    return () => {
+      synth.cancel();
+    };
+  }, [text]);
+
+  const handlePlay = () => {
+    const synth = window.speechSynthesis;
+
+    if (isPaused) {
+      synth.resume();
+    }
+    synth.speak(utterance!);
+
+    setIsPaused(false);
+  };
+
+  const handlePause = () => {
+    const synth = window.speechSynthesis;
+
+    synth.pause();
+
+    setIsPaused(true);
+  };
+
+  const handleStop = () => {
+    const synth = window.speechSynthesis;
+
+    synth.cancel();
+
+    setIsPaused(false);
+  };
+
+  return (
+    <>
+      <button onClick={handlePlay}>{isPaused ? <img src="/assets/resume-button.png" alt="" className="w-10 h-10 bg-blue-500 hover:bg-blue-700" /> : <img src="/assets/Play-button.png" className="bg-blue-500 w-10 h-10 hover:bg-blue-700"></img> }</button>
+      <button onClick={handlePause}><img src="/assets/Pause-button.png" className="bg-blue-500 w-10 h-10 hover:bg-blue-700"></img></button>
+      <button onClick={handleStop}><img src="/assets/stop-button.png" className="bg-blue-500 w-10 h-10 hover:bg-blue-700"></img></button>
+    </>
+  );
+};
+
+
+
+
+const DynamicTextarea = () => {
+
+  const [visibletools,setvisibletools]=useState(true);
+const [speak,setSpeak]=useState("");  
+const [tts,settts]=useState(0);
+
+useEffect(()=>{
+  const token= localStorage.getItem("token");
+  console.log(token?.split(' ')[1]);
+  if(!token){
+    redirect('/login');
+  }
+},[]);
+
+//speech recognation
+const startListening = () =>
+    SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
+
+  const stopListening = () => SpeechRecognition.stopListening();
+
+  const { transcript,resetTranscript,listening,
+  browserSupportsSpeechRecognition } =
+    useSpeechRecognition();
+    
+  if (!browserSupportsSpeechRecognition) {
+    return null;
+  }
+
+
+  const scrollref=useRef<HTMLTextAreaElement | null> (null);
   const [text,setetext]=useState('');
   const [visible,setvisible]=useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [user,setuser]=useState(['']);
   const [conversation,setcoversation]=useState<string[]>([]);
+
+ async function scroll(){
+
+  setTimeout(() => {
+    if (typeof window !== 'undefined') {
+      const chatarea = scrollref.current;
+      if (chatarea) {
+        window.scrollTo({
+          top: chatarea.scrollHeight,
+          left: 0,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, 1000);
+ }
+      
+
+
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -61,69 +220,111 @@ export const DynamicTextarea = () => {
   return (
     <>
     <div className='flex h-screen w-screen justify-center bg-black'>
-      {(visible) ? <div className='bg-gray-700 text-blue md:w-1/6 h-full fixed z-10 start-0 w-60 overflow-scroll'> 
+      {(visible) ? <div className='bg-gray-700 text-blue md:w-1/6 h-full fixed z-10 start-0 w-60 overflow-auto'> 
       <button className='bg-gray-700 w-10 rounded-lg' onClick={(visible)=>{
         setvisible(!visible);
       }}><img src="/assets/cross-image.png" className="bg-gray-700 w-10 h-10"></img></button>
 
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex'>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex'>
     <div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div> 
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
-      <div className='bg-gray-300 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div> 
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
+      <div className='bg-blue-500 hover:bg-blue-700 h-20 m-2 rounded-lg justify-center items-center flex text-white'><div>Hey</div></div>
       </div>
       :
       <button className='bg-black w-10 fixed z-100 start-0 rounded-2xl' onClick={(visible)=>{
         setvisible(true);
-      }}><img src='/assets/hamburger-button.png' className="bg-gray-700 h-10 w-10 rounded-md"></img></button>
+      }}><img src='/assets/hamburger-button.png' className="bg-gray-700 h-10 w-10 r-blue-700"></img></button>
       }
        
-    <div className='flex flex-col items-center w-5/6 md:ml-52 h-full'>   
-    <div className='h-5/6 w-5/6 mt-10 overflow-x-none'>
+    <div className='flex flex-col items-center w-5/6 md:ml-52 h-full' >   
+    <div ref={scrollref} className='h-5/6 w-5/6 mt-10 overflow-x-none' >
+   {visibletools? <div className="w-full" onDoubleClick={()=>{
+      setvisibletools(!visibletools);
+    }}><div className="bg-black fixed z-1 rounded-lg h-12 w-32 bg-blue-500 flex flex-row justify-center items-center opacity-40 right-5">
+      <TextToSpeech text={speak}/>
       
+    </div>
+    <ImageUpload/></div>:<div className="w-full h-full opacity-0 fixed z-1" onClick={()=>{
+      setvisibletools(!visibletools);
+    }}></div>
+
+   }
+   
+
+
     <Suspense fallback={<p>Loading feed...</p>}>
+   
        
     {conversation.map((d)=>{
   return <>
+
+  {/*  nkdsbfhjdsvfhkdsfkhds */}
+  <article className="w-full mr-10 break-words justify-end">
   <ReactMarkdown>{d}</ReactMarkdown>
+  </article>
   <div className='w-full h-px bg-gray-300 rounded-md mt-4 mb-4'></div>
+
   </>
 })}
       </Suspense>
       <div className='h-32 w-full'></div>
     </div>
-      <div className='flex justify-around fixed z-100 bottom-1 md:w-3/6 w-80'>
+      <div className='flex justify-center items-center fixed z-100 bottom-1 md:w-3/6 w-80 border-gray-700 border-2 rounded-2xl bg-white'>
+      
      <textarea
       ref={textareaRef}
-      value={text}
+      value={text || transcript}
       placeholder="Type Here..."
-      className="w-full p-2 border border-gray-300 rounded-2xl resize-none outline-none overflow:auto text-black max-h-32 w-1/2 border-2"
+      className="w-full p-2 rounded-2xl resize-none outline-none overflow-auto text-black max-h-32 w-1/2"
       onChange={((e)=>{
         setetext(e.target.value);
+        console.log(e.target.value);
       })}
     ></textarea>
-    <button className='bg-white w-20 h-10 text-black rounded-lg border-2 border-gray-300 ml-4 mt-4 mr-4' onClick={async ()=>{
+    <div className="flex flex-row ">
+   
+
+    <MicButton
+          onStartListening={startListening}
+          onStopListening={stopListening}
+        />      
+
+    <button className='bg-white w-14 h-10 text-black' onClick={async (event)=>{
+      console.log(transcript);
+      resetTranscript();
       // call the api
-       setTimeout(() => {
+     setTimeout(() => {
         console.log("Fetching data");
       }, 2000);
       // then setstate of conversation
       var arr=[...conversation];
-      arr.push(text);
+      arr.push(text || transcript);
+      setetext("");
       arr.push(markdown);
       setcoversation(arr);
+      settts((t)=>t+=2);
+      var tospeak="";
+      tospeak=text || transcript;
+      tospeak+=" "+markdown;
+      
+      setSpeak(tospeak);
+      console.log(tts);
+      console.log(conversation)
+      await scroll();
      
-    }}>send</button>
+    }}><img src="/assets/send-message.png" className="h-10 w-10 mr-2"></img></button>
+  </div>
       </div>
      </div>
    </div>
@@ -140,13 +341,22 @@ export const DynamicTextarea = () => {
 export default function Fun({params}:{
    params: {id:string}
 }) {
+  
 const id=params.id;
+  useEffect(()=>{
+    if(id!='science' && id!='computer'){
+      redirect('/chat');
+    }
+  },[]);
 
   console.log(id);
 
   return (
     <>
-     <DynamicTextarea/>
+    <div>
+    <DynamicTextarea/>
+    </div>
+   
     </>
   );
 }
